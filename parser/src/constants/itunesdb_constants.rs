@@ -1,8 +1,8 @@
 /**
  * File: itunesdb_constants.rs
- * 
+ *
  * Provides the different constants needed to index info inside of the iTunesDB file.
- * 
+ *
  * Constants are split into "sections", ie 'Image List', 'Image Item'. Each section has a header,
  * and within that header are fields, which have two values associated with them:
  * (1) an offset -- where it is found in the header structure
@@ -17,7 +17,7 @@ pub const DEFAULT_SUBSTRUCTURE_SIZE: usize = 4;
     // ----- DATABASE OBJECT ----- //
     pub const DATABASE_OBJECT_KEY: &str = "mhbd";
 
-    pub const DATABASE_OBJECT_VERSION_NUMBER_OFFSET: usize = 4;
+    pub const DATABASE_OBJECT_VERSION_NUMBER_OFFSET: usize = 16;
     pub const DATABASE_OBJECT_VERSION_NUMBER_LEN: usize = 4;
 
     pub const DATABASE_OBJECT_LANGUAGE_OFFSET: usize = 70;
@@ -225,7 +225,7 @@ pub const DEFAULT_SUBSTRUCTURE_SIZE: usize = 4;
 
 
     // TODO: The iTunesDB file I was provided didn't have anything in this section, even though this is documented in the iTunesDB wiki.
-     
+
     // ----- ALBUM ITEM ----- //
     // pub const ALBUM_ITEM_KEY: &str = "mhia";
 

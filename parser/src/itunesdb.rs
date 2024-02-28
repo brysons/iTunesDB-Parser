@@ -53,7 +53,7 @@ pub struct Song {
     pub song_composer: String,
     pub song_album: String,
     pub song_genre: String,
-    pub song_comment: String, 
+    pub song_comment: String,
     /// As far as I can tell from looking at the output, this field
     /// is always the last one to get populated
     pub song_filename: String,
@@ -95,7 +95,7 @@ impl Song {
     pub fn set_song_duration(&mut self, song_duration_raw: u32) {
 
         self.song_duration_s = super::itunesdb::decode_raw_track_length_to_s(song_duration_raw);
-        
+
         self.song_duration_friendly =
             helpers::convert_seconds_to_human_readable_duration(self.song_duration_s);
     }
@@ -169,6 +169,13 @@ pub fn parse_version_number(version_number: u32) -> String {
         itunes_version = "Tunes 7.3.1 - 7.3.2".to_string();
     } else if version_number == 0x19 {
         itunes_version = "iTunes 7.4".to_string();
+    } else if version_number > 0x19 {
+        // The ipod linux document ends at iTunes 7.4. Our sample files from
+        // 2023 and 2024 show 115 and 116. I know the 116 was written by Apple
+        // Music/Finder on MacOS in the post-iTunes era. I'm not sure if this
+        // lines up with iTunes 12.12.x on Windows, or how we could map any
+        // older versions, so just keep it generic.
+        itunes_version = format!("iTunes > 7.4 ({})", version_number);
     } else {
         itunes_version = format!("N/A ({})", version_number);
     }
