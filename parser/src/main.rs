@@ -35,6 +35,14 @@ fn main() {
         .nth(1)
         .expect("Missing first parameter: iTunes DB filename");
 
+
+    let verbose_logging = std::env::args()
+        .nth(3);
+    let verbose_logging = match verbose_logging {
+        Some(str) => str == "-v",
+        None => false
+    };
+
     let itunesdb_file_path = std::path::Path::new(&itunesdb_filename);
 
     if !itunesdb_file_path.exists() {
@@ -72,7 +80,7 @@ fn main() {
             photos_csv_writer,
         );
     } else if itunesdb_file_type == "itunes" {
-        parsers::itunesdb_parser::parse_itunesdb_file(itunesdb_file_as_bytes);
+        parsers::itunesdb_parser::parse_itunesdb_file(itunesdb_file_as_bytes, verbose_logging);
     } else if itunesdb_file_type == "itprefs" {
         parsers::preferences_parser::parse_itunes_prefs_file(itunesdb_file_as_bytes);
     } else if itunesdb_file_type == "playcounts" {

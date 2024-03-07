@@ -7,7 +7,7 @@ use crate::helpers::helpers;
 use crate::helpers::itunesdb_helpers;
 
 
-pub fn parse_itunesdb_file(itunesdb_file_as_bytes : Vec<u8>) {
+pub fn parse_itunesdb_file(itunesdb_file_as_bytes : Vec<u8>, verbose_logging : bool) {
 
     let mut music_csv_writer = helpers::init_csv_writer("music.csv");
     let mut podcast_csv_writer = helpers::init_csv_writer("podcasts.csv");
@@ -62,10 +62,12 @@ pub fn parse_itunesdb_file(itunesdb_file_as_bytes : Vec<u8>) {
 
             let dataset_type_parsed = itunesdb::parse_dataset_type(dataset_type_raw[0] as u32);
 
-            // println!(
-            //     "Dataset Type: {}",
-            //     dataset_type_parsed
-            // );
+            if verbose_logging {
+                println!(
+                    "Dataset Type: {}",
+                    dataset_type_parsed
+                );
+            }
 
             idx += itunesdb_constants::DATASET_LAST_OFFSET;
         }
@@ -593,7 +595,9 @@ pub fn parse_itunesdb_file(itunesdb_file_as_bytes : Vec<u8>) {
                 )
                 .unwrap();
 
-                // println!("{} \n", track_item_info);
+                if verbose_logging {
+                    println!("{} \n", track_item_info);
+                }
             }
 
             else if matches!(
@@ -865,7 +869,9 @@ pub fn parse_itunesdb_file(itunesdb_file_as_bytes : Vec<u8>) {
                 }
             }
 
-            // println!("{} %%%%%%% \r\n", data_object_info);
+            if verbose_logging {
+                println!("{} %%%%%%% \r\n", data_object_info);
+            }
 
             idx += itunesdb_constants::DATA_OBJECT_LAST_OFFSET;
         }
