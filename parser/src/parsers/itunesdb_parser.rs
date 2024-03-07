@@ -377,7 +377,17 @@ pub fn parse_itunesdb_file(itunesdb_file_as_bytes : Vec<u8>) {
 
                 let track_skip_when_shuffle_setting = &itunesdb_file_as_bytes[idx + itunesdb_constants::TRACK_ITEM_TRACK_SKIP_WHEN_SHUFFLING_SETTING_OFFSET .. idx + itunesdb_constants::TRACK_ITEM_TRACK_SKIP_WHEN_SHUFFLING_SETTING_OFFSET + itunesdb_constants::TRACK_ITEM_TRACK_SKIP_WHEN_SHUFFLING_SETTING_LEN];
 
-                write!(track_item_info, "Play/Skip statistics: # of plays: {} , Last played on: {} | # of skips: {}, Last skipped on: {} (Skip when shuffling? {}) ", track_play_count, track_last_played_timestamp, track_skipped_count, track_last_skipped_timestamp, track_skip_when_shuffle_setting[0] ).unwrap();
+                let last_played_msg = match track_last_played_timestamp {
+                    Some(ts) => format!("Last played on: {}", ts),
+                    None => "No last played data".to_string(),
+                };
+
+                let last_skipped_msg = match track_last_skipped_timestamp {
+                    Some(ts) => format!("Last skipped on {}", ts),
+                    None => "No last skipped time".to_string(),
+                };
+
+                write!(track_item_info, "Play/Skip statistics: # of plays: {} , {} | # of skips: {}, {} (Skip when shuffling? {}) ", track_play_count, last_played_msg, track_skipped_count, last_skipped_msg, track_skip_when_shuffle_setting[0]).unwrap();
 
                 let track_is_compilation_setting_raw = &itunesdb_file_as_bytes[idx
                     + itunesdb_constants::TRACK_ITEM_IS_COMPILATION_SETTING_OFFSET
@@ -549,7 +559,7 @@ pub fn parse_itunesdb_file(itunesdb_file_as_bytes : Vec<u8>) {
                     itunesdb_constants::TRACK_ITEM_TRACK_MODIFIED_TIME_LEN,
                 );
 
-                let track_published_to_store_timestamp: chrono::DateTime<chrono::Utc> =
+                let track_published_to_store_timestamp: Option<chrono::DateTime<chrono::Utc>> =
                     helpers::get_slice_as_mac_timestamp(
                         idx,
                         &itunesdb_file_as_bytes,
@@ -557,10 +567,20 @@ pub fn parse_itunesdb_file(itunesdb_file_as_bytes : Vec<u8>) {
                         itunesdb_constants::TRACK_ITEM_TRACK_RELEASED_TIMESTAMP_LEN,
                     );
 
+                let last_modified_msg = match track_modified_timestamp {
+                    Some(ts) => format!("Last modified: {}", ts),
+                    None => "No last modified date".to_string(),
+                };
+
+                let published_to_store_msg = match track_published_to_store_timestamp {
+                    Some(ts) => format!("Published to iTunes store: {}", ts),
+                    None => "No store publish date".to_string(),
+                };
+
                 write!(
                     track_item_info,
-                    "Last modified: {} Published to iTunes store: {}",
-                    track_modified_timestamp, track_published_to_store_timestamp
+                    "{} {}",
+                    last_modified_msg, published_to_store_msg,
                 )
                 .unwrap();
 
@@ -600,10 +620,15 @@ pub fn parse_itunesdb_file(itunesdb_file_as_bytes : Vec<u8>) {
                 itunesdb_constants::PLAYLIST_CREATED_TIMESTAMP_LEN,
             );
 
+            let playlist_creation_message = match playlist_created_timestamp {
+                Some(ts) => format!("Playlist created at: {}", ts),
+                None => "Playlist created at timestamp missing".to_string(),
+            };
+
             write!(
                 playlist_info,
                 " | Playlist created at: {} ",
-                playlist_created_timestamp
+                playlist_creation_message,
             )
             .unwrap();
 
@@ -635,10 +660,15 @@ pub fn parse_itunesdb_file(itunesdb_file_as_bytes : Vec<u8>) {
                 itunesdb_constants::PLAYLIST_ITEM_ADDED_TIMESTAMP_LEN,
             );
 
+            let playlist_item_added_msg = match playlist_item_added_timestamp {
+                Some(ts) => format!("Date added to playlist: {}", ts),
+                None => "Added to playlist timestamp missing".to_string(),
+            };
+
             write!(
                 playlist_item_info,
-                " | Date added to playlist: {}",
-                playlist_item_added_timestamp
+                " | {}",
+                playlist_item_added_msg,
             )
             .unwrap();
 
@@ -728,7 +758,7 @@ pub fn parse_itunesdb_file(itunesdb_file_as_bytes : Vec<u8>) {
                 {
                     if curr_media_type == itunesdb::HandleableMediaType::SongLike {
                         curr_song.song_title = data_object_str;
-                    } 
+                    }
                     else if curr_media_type == itunesdb::HandleableMediaType::Podcast {
                         curr_podcast.podcast_title = data_object_str;
                     }
@@ -789,7 +819,7 @@ pub fn parse_itunesdb_file(itunesdb_file_as_bytes : Vec<u8>) {
                     }
                 }
                 else if data_object_type_raw == itunesdb::HandleableDataObjectType::FileType as u32 {
-                    
+
                     if curr_media_type == itunesdb::HandleableMediaType::Podcast {
 
                         curr_podcast.podcast_file_type = data_object_str;
@@ -797,7 +827,7 @@ pub fn parse_itunesdb_file(itunesdb_file_as_bytes : Vec<u8>) {
 
                 }
                 else if data_object_type_raw == itunesdb::HandleableDataObjectType::PodcastDescription as u32 {
-                    
+
                     if curr_media_type == itunesdb::HandleableMediaType::Podcast {
 
                         curr_podcast.podcast_description = data_object_str;

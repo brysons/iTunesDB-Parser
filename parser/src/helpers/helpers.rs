@@ -1,6 +1,6 @@
 /**
  * File: helpers.rs
- * 
+ *
  * General helper methods. For iTunes-specific helper methods, see itunesdb_helpers.rs
  *
  */
@@ -92,15 +92,15 @@ pub fn get_slice_as_mac_timestamp(
     file_as_array: &[u8],
     file_offset: usize,
     slice_len: usize,
-) -> chrono::DateTime<chrono::Utc> {
+) -> Option<chrono::DateTime<chrono::Utc>> {
     let epoch_time: u64 =
         get_slice_as_le_u32(array_idx, file_as_array, file_offset, slice_len) as u64;
 
     if epoch_time == 0 {
-        eprintln!("Error! Epoch time converted was 0. Check the slice starting at idx {} with len {}, actually contains a valid timestamp", array_idx, slice_len);
+        return None
     }
 
-    return get_timestamp_as_mac(epoch_time);
+    Some(get_timestamp_as_mac(epoch_time))
 }
 
 /// // Build UTF-16 array, out of UTF-8, by combining elements pairwise
