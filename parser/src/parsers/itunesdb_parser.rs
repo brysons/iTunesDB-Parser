@@ -202,8 +202,19 @@ pub fn parse_itunesdb_file(itunesdb_file_as_bytes : Vec<u8>) {
                 track_media_type_enum,
                 itunesdb::HandleableMediaType::SongLike
             ) {
-
+                // New song found
+                // Set media type to song
                 curr_media_type = track_media_type_enum;
+
+                // Push previous song since the parser found a new one
+                if curr_song.are_enough_fields_valid() {
+                    songs_found.push(curr_song);
+                } else if curr_song != itunesdb::Song::default() {
+                    // Some data is left in curr_song, but not enough to interpret
+                    eprintln!("ERROR! Incomplete song found! {:?}", curr_song);
+                }
+                // Create a new Song instance to accumulate data for the new song
+                curr_song = itunesdb::Song::default();
 
                 let track_advanced_audio_type = helpers::get_slice_as_le_u32(
                     idx,
@@ -358,8 +369,6 @@ pub fn parse_itunesdb_file(itunesdb_file_as_bytes : Vec<u8>) {
                     itunesdb_constants::TRACK_ITEM_TRACK_SKIPPED_COUNT_OFFSET,
                     itunesdb_constants::TRACK_ITEM_TRACK_SKIPPED_COUNT_LEN,
                 );
-
-                // TODO: WHy are the last played timestamps zero sometimes?
 
                 let track_last_played_timestamp = helpers::get_slice_as_mac_timestamp(
                     idx,
@@ -584,7 +593,7 @@ pub fn parse_itunesdb_file(itunesdb_file_as_bytes : Vec<u8>) {
                 )
                 .unwrap();
 
-                //println!("{} \n", track_item_info);
+                // println!("{} \n", track_item_info);
             }
 
             else if matches!(
@@ -811,12 +820,6 @@ pub fn parse_itunesdb_file(itunesdb_file_as_bytes : Vec<u8>) {
                     == itunesdb::HandleableDataObjectType::FileLocation as u32
                 {
                     curr_song.set_song_filename(data_object_str);
-
-                    if curr_song.are_enough_fields_valid() {
-                        songs_found.push(curr_song);
-                        curr_song = itunesdb::Song::default();
-
-                    }
                 }
                 else if data_object_type_raw == itunesdb::HandleableDataObjectType::FileType as u32 {
 
@@ -839,6 +842,10 @@ pub fn parse_itunesdb_file(itunesdb_file_as_bytes : Vec<u8>) {
                         curr_podcast = itunesdb::Podcast::default();
                     }
                 }
+
+                // Advance past the string itself. String length may not be a multiple of 4, so idx
+                // could miss a 4-byte substructure header if this isn't accounted for.
+                idx += data_object_string_len as usize;
             }
             // Non-string MHODs
             else {
@@ -858,12 +865,19 @@ pub fn parse_itunesdb_file(itunesdb_file_as_bytes : Vec<u8>) {
                 }
             }
 
-            //println!("{} %%%%%%% \r\n", data_object_info);
+            // println!("{} %%%%%%% \r\n", data_object_info);
 
             idx += itunesdb_constants::DATA_OBJECT_LAST_OFFSET;
         }
 
         idx += itunesdb_constants::DEFAULT_SUBSTRUCTURE_SIZE;
+    }
+
+    // Add the last song and podcast
+    if curr_song.are_enough_fields_valid() {
+        songs_found.push(curr_song);
+    } else {
+        eprintln!("ERROR! Incomplete song found! {:?}", curr_song);
     }
 
     println!("{} podcasts found", podcasts_found.len());

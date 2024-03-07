@@ -35,6 +35,8 @@
     }
  }
 
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub struct Song {
     pub file_extension: String,
     pub bitrate_kbps: u32,
