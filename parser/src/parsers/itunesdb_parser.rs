@@ -1,4 +1,5 @@
 use std::fmt::Write;
+use std::string;
 
 use crate::constants::itunesdb_constants;
 use crate::itunesdb;
@@ -17,6 +18,8 @@ pub fn parse_itunesdb_file(itunesdb_file_as_bytes : Vec<u8>, verbose_logging : b
 
     let mut curr_song = itunesdb::Song::default();
     let mut curr_podcast = itunesdb::Podcast::default();
+
+    let mut curr_song_strings_remaining: Option<usize> = None;
 
     let mut curr_media_type = itunesdb::HandleableMediaType::UNKNOWN;
 
@@ -208,15 +211,16 @@ pub fn parse_itunesdb_file(itunesdb_file_as_bytes : Vec<u8>, verbose_logging : b
                 // Set media type to song
                 curr_media_type = track_media_type_enum;
 
-                // Push previous song since the parser found a new one
-                if curr_song.are_enough_fields_valid() {
-                    songs_found.push(curr_song);
-                } else if curr_song != itunesdb::Song::default() {
-                    // Some data is left in curr_song, but not enough to interpret
-                    eprintln!("ERROR! Incomplete song found! {:?}", curr_song);
-                }
                 // Create a new Song instance to accumulate data for the new song
                 curr_song = itunesdb::Song::default();
+
+                // MHIT is always followed by associated MHODs, which we can use to know when
+                // the list of MHODs is done for this song.
+                curr_song_strings_remaining = Some(helpers::get_slice_as_le_u32(
+                    idx,
+                    &itunesdb_file_as_bytes,
+                    itunesdb_constants::TRACK_ITEM_NUM_STRINGS_OFFSET,
+                    itunesdb_constants::TRACK_ITEM_NUM_STRINGS_LEN) as usize);
 
                 let track_advanced_audio_type = helpers::get_slice_as_le_u32(
                     idx,
@@ -866,6 +870,24 @@ pub fn parse_itunesdb_file(itunesdb_file_as_bytes : Vec<u8>, verbose_logging : b
                         podcast_url
                     )
                     .unwrap();
+                }
+            }
+
+            // Track the number of String MHODs processed vs expected for the current song
+            if let Some(strings_remaining) = curr_song_strings_remaining {
+                let strings_remaining = strings_remaining - 1;
+                curr_song_strings_remaining = Some(strings_remaining);
+
+                if strings_remaining == 0 {
+                    // Push the song since we found all its strings
+                    if curr_song.are_enough_fields_valid() {
+                        songs_found.push(curr_song);
+                    } else if curr_song != itunesdb::Song::default() {
+                        // Some data is left in curr_song, but not enough to interpret
+                        eprintln!("ERROR! Incomplete song found! {:?}", curr_song);
+                    }
+                    curr_song = itunesdb::Song::default();
+                    curr_song_strings_remaining = None;
                 }
             }
 

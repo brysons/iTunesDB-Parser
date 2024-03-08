@@ -44,6 +44,9 @@ pub const DEFAULT_SUBSTRUCTURE_SIZE: usize = 4;
     // ----- TRACK ITEM ----- //
     pub const TRACK_ITEM_KEY: &str = "mhit";
 
+    pub const TRACK_ITEM_NUM_STRINGS_OFFSET: usize = 12;
+    pub const TRACK_ITEM_NUM_STRINGS_LEN: usize = 4;
+
     pub const TRACK_ITEM_TRACK_FILETYPE_OFFSET: usize = 24;
     pub const TRACK_ITEM_TRACK_FILETYPE_LEN: usize = 4;
 
